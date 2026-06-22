@@ -53,7 +53,7 @@
 
   // Reveal on scroll
   if (!prefersReduced && 'IntersectionObserver' in window) {
-    const targets = $$('.card, .tile, .gallery-item, .section-title, .section-lead');
+    const targets = $$('.card, .tile, .pack, .section-title, .section-lead');
     targets.forEach(el => el.classList.add('reveal'));
     const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach(entry => {
@@ -64,5 +64,88 @@
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     targets.forEach(el => observer.observe(el));
+  }
+
+  // Carrusel galería
+  const carousel = $('#carousel');
+  const track = $('#carouselTrack');
+  const dotsWrap = $('#carouselDots');
+  if (carousel && track && dotsWrap) {
+    const slides = $$('.slide', track);
+    const prev = $('.carousel-arrow--prev', carousel);
+    const next = $('.carousel-arrow--next', carousel);
+
+    slides.forEach((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'carousel-dot' + (i === 0 ? ' is-active' : '');
+      b.setAttribute('aria-label', `Ir a slide ${i + 1}`);
+      b.addEventListener('click', () => goTo(i));
+      dotsWrap.appendChild(b);
+    });
+    const dots = $$('.carousel-dot', dotsWrap);
+
+    const goTo = (i) => {
+      const slide = slides[i];
+      if (!slide) return;
+      const left = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
+      track.scrollTo({ left, behavior: prefersReduced ? 'auto' : 'smooth' });
+    };
+
+    const step = (dir) => {
+      const active = currentIndex();
+      goTo(Math.max(0, Math.min(slides.length - 1, active + dir)));
+    };
+
+    const currentIndex = () => {
+      const center = track.scrollLeft + track.clientWidth / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      slides.forEach((s, i) => {
+        const sc = s.offsetLeft + s.clientWidth / 2;
+        const d = Math.abs(sc - center);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      return best;
+    };
+
+    prev && prev.addEventListener('click', () => step(-1));
+    next && next.addEventListener('click', () => step(1));
+
+    let raf;
+    track.addEventListener('scroll', () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const i = currentIndex();
+        dots.forEach((d, idx) => d.classList.toggle('is-active', idx === i));
+      });
+    }, { passive: true });
+
+    // Autoplay con pausa al interactuar
+    let autoplay;
+    let paused = false;
+    const start = () => {
+      if (prefersReduced) return;
+      stop();
+      autoplay = setInterval(() => {
+        if (paused) return;
+        const i = currentIndex();
+        goTo(i >= slides.length - 1 ? 0 : i + 1);
+      }, 4500);
+    };
+    const stop = () => { if (autoplay) clearInterval(autoplay); };
+    ['pointerdown', 'touchstart', 'mouseenter'].forEach(ev =>
+      carousel.addEventListener(ev, () => { paused = true; }, { passive: true })
+    );
+    carousel.addEventListener('mouseleave', () => { paused = false; });
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => e.isIntersecting ? start() : stop());
+      }, { threshold: 0.25 });
+      io.observe(carousel);
+    } else {
+      start();
+    }
   }
 })();
