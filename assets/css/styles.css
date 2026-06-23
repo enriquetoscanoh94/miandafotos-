@@ -390,7 +390,25 @@ button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .social{margin:0}
 .socials{display:flex;flex-direction:column;gap:10px;margin-top:18px}
 .social svg{width:20px;height:20px;color:var(--gold);flex-shrink:0}
-.social span{font-size:.95rem}
+.social span{font-size:.95rem;word-break:break-word}
+
+/* ===== COLABORADOR ===== */
+.collab{
+  margin-top:36px;
+  padding-top:28px;
+  border-top:1px solid var(--line);
+}
+.collab .eyebrow{margin-bottom:12px}
+.collab-name{
+  font-family:'Cinzel',serif;
+  font-size:1.15rem;font-weight:500;letter-spacing:.04em;
+  color:#fff;margin-bottom:6px;
+}
+.collab-desc{
+  color:var(--ink-soft);font-weight:300;
+  font-size:.92rem;margin-bottom:18px;
+}
+.collab-links{display:flex;flex-direction:column;gap:10px}
 
 .contact-form{
   display:flex;flex-direction:column;gap:16px;
